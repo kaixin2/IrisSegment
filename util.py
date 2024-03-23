@@ -1,3 +1,5 @@
+import os
+
 from keras.preprocessing.image import img_to_array
 import numpy as np
 import glob
@@ -8,7 +10,7 @@ class dataProcess(object):
     def __init__(self, out_rows, out_cols,
                  data_path='Data/CAV/guassian_noise_224/train/img/',
                  label_path='Data/CAV/guassian_noise_224/train/mask/',
-                 npy_path="Data/CAV/guassian_noise_224/", img_type="JPG"):
+                 npy_path="Data/CAV/guassian_noise_224/", img_type="jpg"):
 
         self.out_rows = out_rows
         self.out_cols = out_cols
@@ -49,7 +51,7 @@ class dataProcess(object):
             i += 1
         print('loading done')
         np.save(self.npy_path + '/imgs_train.npy', imgdatas)
-        # np.save(self.npy_path + '/imgs_mask_train.npy', imglabels)
+        np.save(self.npy_path + '/imgs_mask_train.npy', imglabels)
         print('Saving to .npy files done.')
 
     def load_train_data(self):

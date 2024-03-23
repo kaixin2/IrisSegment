@@ -130,7 +130,7 @@ def load_data():
 
 def create_model():
     # 其中shape=[224, 224, 1]指定了输入的形状。具体来说，这个模型期望接受的输入是一个三维的张量，其大小为224x224，其中的通道数为1。
-    inputs = Input(shape=[224, 224, 1])
+    inputs = Input(shape=[280, 320, 1])
 
     """
     dropRate = 0.5: 这是模型中使用的丢弃率（dropout rate），表示在训练过程中随机丢弃神经元的比例，以防止过拟合。
@@ -250,6 +250,7 @@ def create_model():
     dense_out_2_s = UpSampling2D(size=(2, 2))(dense_out_2)
     dense_out_3_s = UpSampling2D(size=(4, 4))(dense_out_3)
     dense_out_4_s = UpSampling2D(size=(8, 8))(dense_out_4)
+    # 进行上采样后，张量尺寸变了
     dense_out_5_s = UpSampling2D(size=(16, 16))(dense_out_5)
 
     # reference layer
@@ -361,7 +362,10 @@ def train():
     mode='auto'：模型检查点的保存模式，根据监测的量自动选择。
     period=1：每多少个训练周期保存一次模型。
     """
-    model_checkpoint = ModelCheckpoint(model_path + 'model_new.hdf5', monitor='loss', verbose=1,
+    # model_checkpoint = ModelCheckpoint(model_path + 'model_new.hdf5', monitor='loss', verbose=1,
+    #                                    save_best_only=True, save_weights_only=False, mode='auto', period=1)
+
+    model_checkpoint = ModelCheckpoint(model_path + 'kaix.hdf5', monitor='loss', verbose=1,
                                        save_best_only=True, save_weights_only=False, mode='auto', period=1)
     print('Fitting model...')
     """
@@ -371,6 +375,7 @@ def train():
     verbose=0：不输出信息。
     mode='auto'：根据监测的量自动选择。
     """
+    min_lr = 0.00000001
     early_stop = EarlyStopping(monitor='loss', patience=10, verbose=0, mode='auto')
     """
     创建了一个 ReduceLROnPlateau 回调函数，用于在训练过程中降低学习率。参数包括：
@@ -383,12 +388,13 @@ def train():
     min_lr=0.00000001：学习率的下限。
     """
     lr = ReduceLROnPlateau(monitor='loss', factor=0.5, patience=6, verbose=0, mode='min', cooldown=0,
-                           min_lr=0.00000001)
+                           min_lr=min_lr)
     """
     最后，使用 fit 方法来训练模型，其中包括了前面创建的回调函数。这里的训练数据是 imgs_train 和 imgs_mask_train，使用的批大小是 2，
     训练周期是 200。同时进行验证，验证集占训练数据的 20%。shuffle=True 表示每个训练周期前打乱训练数据的顺序。
     """
-    history = model.fit(imgs_train, imgs_mask_train, batch_size=2, epochs=200, verbose=1, validation_split=0.2,
+    epoch_num=200
+    history = model.fit(imgs_train, imgs_mask_train, batch_size=2, epochs=epoch_num, verbose=1, validation_split=0.2,
                         shuffle=True,
                         callbacks=[model_checkpoint, lr, early_stop])
 
@@ -399,8 +405,9 @@ def train():
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig(model_path + "accuracy.png")
-    plt.show()
+    accuracy_name = 'min_lr='+str(min_lr)+'_epoch='+str(epoch_num)+'accuracy.png'
+    plt.savefig(model_path + accuracy_name)
+    # plt.show()
 
     # summarize history for loss
     plt.plot(history.history['loss'])
@@ -409,8 +416,9 @@ def train():
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
-    plt.savefig(model_path + "loss.png")
-    plt.show()
+    loss_name = 'min_lr='+str(min_lr)+'_epoch='+str(epoch_num)+'loss.png'
+    plt.savefig(model_path + loss_name)
+    # plt.show()
 
 
 if __name__ == '__main__':
