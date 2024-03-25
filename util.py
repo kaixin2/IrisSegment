@@ -37,10 +37,18 @@ class dataProcess(object):
         imgdatas = np.ndarray((len(imgs), self.out_rows, self.out_cols, 1), dtype=np.uint8)
         imglabels = np.ndarray((len(imgs), self.out_rows, self.out_cols, 1), dtype=np.uint8)
         for imgname in imgs:
-            midname = imgname[imgname.rindex("/") + 1:imgname.rindex(".") + 1]
+            # midname = imgname[imgname.rindex("/") + 1:imgname.rindex(".") + 1]
+            file_name = os.path.basename(imgname)
+
+            # 使用split方法分割文件名，以'.'为分隔符，取第一部分
+            midname = file_name.split('.')[0] + '.'
 
             img = cv2.imread(self.data_path + "/" + midname + self.img_type, 0)
             label = cv2.imread(self.label_path + "/" + midname + "tiff", 0)
+
+            new_size = (224, 224)
+            img = cv2.resize(img, (new_size[1], new_size[0]))
+            label = cv2.resize(label, (new_size[1], new_size[0]))
             img = img_to_array(img)
             label = img_to_array(label)
 
@@ -54,12 +62,28 @@ class dataProcess(object):
         np.save(self.npy_path + '/imgs_mask_train.npy', imglabels)
         print('Saving to .npy files done.')
 
+    def re_size(self,imgs, new_size):
+        resized_imgs = []
+        for img in imgs:
+            # 将每张图像调整为新尺寸
+            resized_img = cv2.resize(img, (new_size[1], new_size[0]))
+            resized_img = np.expand_dims(resized_img, axis=-1)
+            resized_imgs.append(resized_img)
+        return np.array(resized_imgs)
+
     def load_train_data(self):
         print('-' * 30)
         print('load train util images...')
         print('-' * 30)
         imgs_train = np.load(self.npy_path + "/imgs_train.npy")
         imgs_mask_train = np.load(self.npy_path + "/imgs_mask_train.npy")
+
+        # new_size = (224, 224)
+        #
+        # # 调整图像大小为224 * 224
+        # imgs_train = self.re_size(imgs_train,new_size)
+        # imgs_mask_train = self.re_size(imgs_mask_train,new_size)
+
         print(imgs_train.shape)
         imgs_train = imgs_train.astype('float32')
         imgs_mask_train = imgs_mask_train.astype('float32')
@@ -72,5 +96,6 @@ class dataProcess(object):
 
 
 if __name__ == "__main__":
-    mydata = dataProcess(224, 224)
+    mydata = dataProcess(224, 224,data_path='Data/CAV/CASIA-Interval-V4-plus/images',label_path='Data/CAV/CASIA-Interval-V4-plus/groundtruth',
+                         npy_path='Data/CAV/CASIA-Interval-V4-plus/')
     mydata.create_train_data()

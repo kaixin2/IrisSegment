@@ -122,7 +122,8 @@ def Re_weight(inputs):
 
 
 def load_data():
-    mydata = dataProcess(224, 224)
+    # mydata = dataProcess(224, 224)
+    mydata = dataProcess(224,224,npy_path="Data/CAV/CASIA-Interval-V4-plus")
     # 自定义读取数据方式
     imgs_train, imgs_mask_train = mydata.load_train_data()
     return imgs_train, imgs_mask_train
@@ -130,7 +131,7 @@ def load_data():
 
 def create_model():
     # 其中shape=[224, 224, 1]指定了输入的形状。具体来说，这个模型期望接受的输入是一个三维的张量，其大小为224x224，其中的通道数为1。
-    inputs = Input(shape=[280, 320, 1])
+    inputs = Input(shape=[224, 224, 1])
 
     """
     dropRate = 0.5: 这是模型中使用的丢弃率（dropout rate），表示在训练过程中随机丢弃神经元的比例，以防止过拟合。
@@ -337,9 +338,7 @@ def create_model():
     return model
 
 
-def train():
-    model_path = "Model/CAV/gaussianNoise/"
-
+def train(model_path="Model/CAV/"):
     print("got model")
     model = create_model()
     print("loading data")
@@ -393,7 +392,7 @@ def train():
     最后，使用 fit 方法来训练模型，其中包括了前面创建的回调函数。这里的训练数据是 imgs_train 和 imgs_mask_train，使用的批大小是 2，
     训练周期是 200。同时进行验证，验证集占训练数据的 20%。shuffle=True 表示每个训练周期前打乱训练数据的顺序。
     """
-    epoch_num=200
+    epoch_num=10
     history = model.fit(imgs_train, imgs_mask_train, batch_size=2, epochs=epoch_num, verbose=1, validation_split=0.2,
                         shuffle=True,
                         callbacks=[model_checkpoint, lr, early_stop])
@@ -422,5 +421,5 @@ def train():
 
 
 if __name__ == '__main__':
-    train()
+    train(model_path="Data/CAV/CASIA-Interval-V4-plus/")
     K.clear_session()
